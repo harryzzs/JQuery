@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>To-Do List App</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: white;
+            padding: 20px;
+        }
+
+        #todo-container {
+            max-width: 500px;
+            margin: auto;
+            background: maroon;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px black;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            border-bottom: 1px solid black;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li.completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        .task-text[contenteditable="true"] {
+            outline: 1px dashed #ccc;
+        }
+
+        button {
+            margin-left: 5px;
+        }
+
+        #task-input {
+            width: 70%;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="todo-container">
+        <h2>To-Do List</h2>
+        <input type="text" id="task-input" placeholder="Enter a new task">
+        <button id="add-btn">Add</button>
+        <ul id="task-list"></ul>
+    </div>
+    <script>
+        
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.forEach(task => renderTask(task.text, task.completed));
+        }
+
+        
+        function saveTasks() {
+            let tasks = [];
+            document.querySelectorAll('#task-list li').forEach(li => {
+                tasks.push({
+                    text: li.querySelector('.task-text').textContent,
+                    completed: li.classList.contains('completed')
+                });
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        
+        function renderTask(text, completed = false) {
+            const li = document.createElement('li');
+            li.className = completed ? 'completed' : '';
+            li.innerHTML = `
+                <span class="task-text" contenteditable="false">${text}</span>
+                <div>
+                    <button class="edit-btn">Edit</button>
+                    <button class="done-btn">Done</button>
+                    <button class="delete-btn">Delete</button>
+                </div>
+            `;
+            document.getElementById('task-list').appendChild(li);
+        }
+
+
+        document.getElementById('add-btn').addEventListener('click', () => {
+            const task = document.getElementById('task-input').value.trim();
+            if (task) {
+                renderTask(task);
+                document.getElementById('task-input').value = '';
+                saveTasks();
+            }
+        });
+
+        
+        document.getElementById('task-list').addEventListener('click', e => {
+            if (e.target.classList.contains('edit-btn')) {
+                const text = e.target.closest('li').querySelector('.task-text');
+                text.contentEditable = 'true';
+                text.focus();
+            } else if (e.target.classList.contains('done-btn')) {
+                const li = e.target.closest('li');
+                li.classList.toggle('completed');
+                saveTasks();
+            } else if (e.target.classList.contains('delete-btn')) {
+                const li = e.target.closest('li');
+                li.remove();
+                saveTasks();
+            }
+        });
+
+        document.getElementById('task-list').addEventListener('blur', e => {
+            if (e.target.classList.contains('task-text')) {
+                e.target.contentEditable = 'false';
+                saveTasks();
+            }
+        }, true);
+
+        
+        loadTasks();
+    </script>
+</body>
+</html>
